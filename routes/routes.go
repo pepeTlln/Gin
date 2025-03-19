@@ -11,6 +11,8 @@ type Usuario struct {
 	Email  string `json:"email"`
 }
 
+var usuarios []Usuario
+
 func SetupRoutes(r *gin.Engine) {
 
 	r.GET("/", func(c *gin.Context) {
@@ -20,5 +22,18 @@ func SetupRoutes(r *gin.Engine) {
 		nombre := c.Param("nombre")
 		c.String(http.StatusOK, "Hola %s", nombre)
 	})
+	r.POST("/usuarios", func(c *gin.Context) {
+		var usuario Usuario
+		if err := c.ShouldBindJSON(&usuario); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if usuario.Nombre == "" || usuario.Email == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "nombre y email son requeridos"})
+			return
+		}
+		usuarios = append(usuarios, usuario)
+		c.JSON(http.StatusCreated, usuarios)
 
+	})
 }

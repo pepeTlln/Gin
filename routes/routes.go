@@ -2,6 +2,8 @@ package routes
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,15 +16,26 @@ type Usuario struct {
 var usuarios []Usuario
 
 func SetupRoutes(r *gin.Engine) {
-	r.LoadHTMLGlob("templates/*")
+	r.Static("/static", "./static")
+	r.LoadHTMLGlob("templates/*.html")
 	r.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"title":   "Home",
-			"Heading": "Hola mundo",
-			"Message": "Bienvenido a mi página",
-		})
+		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
-	r.Static("/static", "./static")
+	r.GET("/:page", func(c *gin.Context) {
+		page := c.Param("page")
+		// Verificar si la página ya tiene la extensión ".html"
+		if !strings.HasSuffix(page, ".html") {
+			page += ".html" // Agregar la extensión ".html" si no está presente
+		}
+		// Comprobar si la plantilla solicitada existe
+		if _, err := os.Stat("templates/" + page); err == nil {
+			// Si la plantilla existe, renderizarla
+			c.HTML(http.StatusOK, page, nil)
+		} else {
+			// Si la plantilla no existe, mostrar página de error 404
+			c.HTML(http.StatusNotFound, "404.html", nil)
+		}
+	})
 
 }
